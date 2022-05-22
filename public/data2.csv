@@ -1,0 +1,11 @@
+time,value,path,kind
+1,1000,cat1,real
+2,1200,cat2,real
+3,1100,cat3,fake
+4,1000,cat4,fake
+5,1500,cat5,fake
+6,1600,cat6,fake
+7,1400,cat7,real
+8,1500,cat8,real
+9,1600,cat9,fake
+10,1700,cat10,real
