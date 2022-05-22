@@ -9,8 +9,22 @@ const svg = d3
   .append('svg')
   .attr('width', width + margin.left + margin.right)
   .attr('height', height + margin.top + margin.bottom)
+  .attr('pointer-events', 'all')
   .append('g')
   .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+// 詳細資料的小label，滑鼠hover才看得到
+var tooltip2 = d3
+  .select('body')
+  .append('div')
+  .style('background', '#ffffff')
+  .style('opacity', '0')
+  .style('z-index', '100')
+  .style('position', 'absolute')
+  .style('border', 'solid')
+  .style('border-width', '1px')
+  .style('border-radius', '5px')
+  .style('padding', '3px');
 
 //Read the data
 d3.csv('data2.csv').then(function (data) {
@@ -54,7 +68,8 @@ d3.csv('data2.csv').then(function (data) {
     .selectAll('dot')
     .data(data)
     .enter()
-    .append('g');
+    .append('g')
+    .attr('pointer-events', 'all');
 
   var dataRect = outerShape
     .append('rect')
@@ -67,7 +82,29 @@ d3.csv('data2.csv').then(function (data) {
     })
     .attr('height', 20)
     .attr('width', 20)
-    .style('stroke', '#69b3a2');
+    .style('stroke', '#69b3a2')
+    // 滑鼠hover顯示詳細資料
+    .on('mouseover', (event, d) => {
+      // console.log(d3.pointer(event));
+      tooltip2.style('opacity', '1');
+      d3.select(event.currentTarget) // v6不能用secelt(this)!!!
+        .transition()
+        .duration('50')
+        .attr('opacity', '0.75');
+    })
+    .on('mousemove', (e, d) => {
+      tooltip2
+        .style('left', window.event.pageX + 5 + 'px')
+        .style('top', window.event.pageY + 5 + 'px')
+        .html(d.path + '<br>time: ' + d.time + '<br>value: ' + d.value);
+    })
+    .on('mouseout', (event, d) => {
+      tooltip2.style('opacity', '0');
+      d3.select(event.currentTarget) // v6不能用secelt(this)!!!
+        .transition()
+        .duration('10')
+        .attr('opacity', '1');
+    });
 
   var innerImg = outerShape.append('g');
 
