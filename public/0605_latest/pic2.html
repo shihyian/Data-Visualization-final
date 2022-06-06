@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <!-- Load d3.js -->
+  <script src="https://d3js.org/d3.v6.js"></script>
+  <link rel="stylesheet" href="bar.css" />
+  <style>
+    .select_topright {
+      position: absolute;
+      top: 80px;
+      right: 50px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body style="background-color: #334346">
+  <!-- Create a div where the graph will take place -->
+  <div id="my_dataviz_week"></div>
+  <div class="select_topright" style="right: 1%; top: 10%">
+    <select id="selectButton"></select
+    ><br />
+    <p>
+      <label
+        for="selectButton_genre"
+        style="color: white; font-family: sans-serif; display: block"
+        >Genre
+      </label>
+      <select id="selectButton_genre"></select>
+    </p>
+  </div>
+
+  <script>
+    // set the dimensions and margins of the graph
+    var margin = { top: 80, right: 25, bottom: 30, left: 40 },
+      width = 1500 - margin.left - margin.right,
+      height = 600 - margin.top - margin.bottom;
+    // append the svg object to the body of the page
+    var svg = d3
+      .select('#my_dataviz_week')
+      .append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform', 'translate(10,20)');
+
+    var tooltip = d3
+      .select('#my_dataviz_week')
+      .append('div')
+      .style('opacity', 0)
+      .style('position', 'absolute')
+      .style('background-color', 'white')
+      .style('border', 'solid')
+      .style('border-width', '2px')
+      .style('border-radius', '5px')
+      .style('padding', '5px')
+      .style('font-family', 'sans-serif');
+
+    //Read the data
+    d3.csv('output.csv').then(data => {
+      var sortGroup = ['likes', 'rating', 'views', 'subscribers'];
+      var genreGroup = Array.from(d3.group(data, d => d.genre));
+      genreGroup.unshift(['All', data]);
+      //   console.log(genreGroup);
+
+      d3.select('#selectButton')
+        .selectAll('myOptions')
+        .data(sortGroup)
+        .enter()
+        .append('option')
+        .text(function (d) {
+          return 'sort by ' + d;
+        }) // text showed in the menu
+        .attr('value', function (d) {
+          return d;
+        }); // corresponding value returned by the button
+
+      d3.select('#selectButton_genre')
+        .selectAll('myOptions')
+        .data(genreGroup)
+        .enter()
+        .append('option')
+        .text(function (d) {
+          return d[0];
+        }) // text showed in the menu
+        .attr('value', function (d) {
+          return d[0];
+        }); // corresponding value returned by the button
+
+      // group by weekdays
+      var group = d3.group(data, d => d.weekdays);
+      console.log(group);
+
+      var week = [
+        'MONDAY',
+        'TUESDAY',
+        'WEDNESDAY',
+        'THURSDAY',
+        'FRIDAY',
+        'SATURDAY',
+        'SUNDAY',
+      ];
+      var length = 80;
+
+      var x = d3
+        .scaleLinear()
+        .domain([0, length + 5])
+        .range([0, 1200]);
+      svg
+        .append('g')
+        .attr('class', 'axis-x')
+        .attr('transform', 'translate(100,0)')
+        .attr('stroke-width', '0px')
+        .call(d3.axisTop(x));
+
+      var y = d3.scaleBand().domain(week).range([0, height]);
+
+      svg
+        .append('g')
+        .attr('class', 'axis-y')
+        .attr('transform', 'translate(80,0)')
+        .attr('stroke-width', '0px')
+        .call(d3.axisLeft(y))
+        .select('.domain')
+        .remove();
+
+      var comicBlock = svg.append('g').attr('id', 'comicBlock');
+
+      var weekday = comicBlock
+        .selectAll('block')
+        .data(group)
+        .enter()
+        .append('g')
+        .attr('id', d => d[0]);
+
+      var comic = weekday
+        .selectAll('mybar')
+        .data(d => group.get(d[0]))
+        .enter()
+        .append('g')
+        .attr('class', 'comic');
+
+      // image
+      var comic_defs = comic.append('svg:defs');
+
+      comic_defs
+        .append('svg:pattern')
+        .attr('id', d => `img-${d.title_id}`)
+        .attr('patternUnits', 'userSpaceOnUse')
+        .attr('height', 10)
+        .attr('width', 10)
+        .attr('x', function (d) {
+          if (d.sort_code / length > 1) {
+            return x(d.sort_code - length);
+          } else {
+            return x(d.sort_code);
+          }
+        })
+        .attr('y', function (d) {
+          if (d.sort_code / length > 1) {
+            return y(d.weekdays) + 30;
+          } else {
+            return y(d.weekdays);
+          }
+        })
+        .append('svg:image')
+        .attr('x-link:href', d => `./webtoon_img2/${d.title}.jpg`)
+        .attr('height', 10)
+        .attr('width', 10);
+
+      var mouseover = function (d) {
+        tooltip.style('opacity', 1);
+        d3.selectAll('rect').style('opacity', '0.4');
+        d3.select(this)
+          .style('stroke', 'black')
+          .style('stroke-width', 4)
+          .style('opacity', 1);
+      };
+      var mousemove = function (event, d) {
+        tooltip
+          .html(
+            '<div style="display:inline-block;margin-right:10px"><img src="webtoon_img2/' +
+              d.title +
+              '.jpg"></div>' +
+              '<div style="display:inline-block">Title: ' +
+              d.title +
+              '<br>Author: ' +
+              d.authors +
+              '<br>Genre: ' +
+              d.genre +
+              '<br>Weekdays: ' +
+              d.weekdays_all +
+              '</div>'
+          )
+          .style('left', window.event.pageX + 5 + 'px')
+          .style('top', window.event.pageY + 5 + 'px');
+      };
+      var mouseleave = function (d) {
+        tooltip.style('opacity', 0);
+        d3.selectAll('rect')
+          .style('stroke', '#69b3a2')
+          .style('stroke-width', 1)
+          .style('opacity', '1');
+      };
+
+      var bar = comic
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('id', d => d.title_id)
+        .attr('x', function (d) {
+          if (d.sort_code / length > 1) {
+            return x(d.sort_code - length - 1);
+          } else {
+            return x(d.sort_code);
+          }
+        })
+        .attr('y', function (d) {
+          if (d.sort_code / length > 1) {
+            return y(d.weekdays) + 30;
+          } else {
+            return y(d.weekdays);
+          }
+        })
+        .attr('width', 10)
+        .attr('height', 10)
+        .attr('transform', 'translate(100,30)')
+        .style('fill', d => `url(#img-${d.title_id})`)
+        .style('stroke', '#69b3a2')
+        .on('mouseover', mouseover)
+        .on('mousemove', mousemove)
+        .on('mouseleave', mouseleave);
+
+      function update_genre(selectedOption) {
+        if (selectedOption != 'All') {
+          var dataFilter = data.filter(function (d) {
+            return d.genre == selectedOption;
+          });
+          console.log(dataFilter.length + ' comics');
+          var groupByWeek = d3.group(dataFilter, d => d.weekdays);
+          console.log(groupByWeek);
+          // var groupKey = Array.from(groupByWeek.keys());
+          // console.log(groupKey);
+        } else {
+          var groupByWeek = group;
+        }
+        d3.selectAll('.comic').remove();
+
+        var comic = weekday
+          .data(groupByWeek)
+          .selectAll('mybar')
+          .data(d => {
+            return groupByWeek.get(d[0]);
+          })
+          .enter()
+          .append('g')
+          .attr('class', 'comic');
+        console.log('done');
+        var comic_defs = comic.append('svg:defs');
+
+        comic_defs
+          .append('svg:pattern')
+          .attr('id', d => `img-${d.title_id}`)
+          .attr('patternUnits', 'userSpaceOnUse')
+          .attr('height', 10)
+          .attr('width', 10)
+          .attr('x', function (d, i) {
+            return x(i);
+          })
+          .attr('y', function (d) {
+            return y(d.weekdays);
+          })
+          .append('svg:image')
+          .attr('x-link:href', d => `./webtoon_img2/${d.title}.jpg`)
+          .attr('height', 10)
+          .attr('width', 10);
+
+        var bar = comic.append('rect').attr('id', d => d.title_id);
+        bar
+          .on('mouseover', mouseover)
+          .on('mousemove', mousemove)
+          .on('mouseleave', mouseleave)
+          .transition()
+          .duration(500)
+          .attr('x', function (d, i) {
+            if (i / length > 1) {
+              return x(i - length - 1);
+            } else {
+              return x(i);
+            }
+          })
+          .attr('y', function (d, i) {
+            if (i / length > 1) {
+              return y(d.weekdays) + 30;
+            } else {
+              return y(d.weekdays);
+            }
+          })
+          .attr('width', 10)
+          .attr('height', 10)
+          .attr('transform', 'translate(100,30)')
+          .style('fill', d => `url(#img-${d.title_id})`)
+          .style('stroke', '#69b3a2');
+      }
+
+      d3.select('#selectButton').on('change', function (d) {
+        // recover the option that has been chosen
+        var selectedOption = d3.select(this).property('value');
+        // run the updateChart function with this selected option
+        update_sort(selectedOption);
+      });
+
+      d3.select('#selectButton_genre').on('change', function (d) {
+        // recover the option that has been chosen
+        var selectedOption = d3.select(this).property('value');
+        // run the updateChart function with this selected option
+        update_genre(selectedOption);
+      });
+    });
+  </script>
+</body>

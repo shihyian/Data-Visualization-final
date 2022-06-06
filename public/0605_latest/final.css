@@ -1,0 +1,103 @@
+#dropdownMenuButton {
+  background-color: white;
+  color: #3a5257;
+  border-radius: 50px;
+  width: 250px;
+  height: 30px;
+  font-size: 10px;
+  vertical-align: middle;
+  line-height: 15px;
+}
+
+.slidecontainer {
+  color: white;
+  width: 300px;
+  /* background: #76a2ac; */
+}
+
+#slides {
+  width: 180px;
+  background: #76a2ac;
+}
+
+#slides::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #76a2ac;
+  cursor: pointer;
+}
+
+.dropdown {
+  margin-bottom: 5px;
+}
+
+.navbttn {
+  color: white;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  background-color: #3a5257;
+  height: 30px;
+  width: 250px;
+  font-size: 15px;
+  line-height: 15px;
+}
+
+.navbttn:hover {
+  background-color: white;
+  color: #3a5257;
+}
+
+#nav_input {
+  border-radius: 15px;
+}
+
+#nav_input1 ::placeholder {
+  font-size: 10px;
+}
+
+#nav_submit {
+  background-color: #436d75;
+  border-radius: 15px;
+  height: 30px;
+  color: white;
+  font-size: 10px;
+  text-align: center;
+  line-height: 15px;
+}
+
+#middle {
+  border-radius: 30px;
+  height: 600px;
+}
+
+.triangle {
+  float: center;
+  margin-left: 25px;
+  margin-top: 250px;
+  border: solid 40px;
+  border-color: transparent transparent white transparent;
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  transform: rotate(90deg);
+}
+
+#slider_value1 {
+  width: 220px;
+}
+#slider_value2 {
+  width: 220px;
+}
+#slider_value3 {
+  width: 220px;
+}
+#slider_value4 {
+  width: 220px;
+}
+#slider_value5 {
+  width: 220px;
+}

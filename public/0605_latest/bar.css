@@ -1,0 +1,41 @@
+#my_dataviz {
+  width: 70%;
+  margin: auto;
+}
+
+#buttonArea {
+  width: 60%;
+  margin: auto;
+  margin-bottom: 2%;
+  margin-top: 2%;
+}
+
+.axis-x line {
+  stroke: white;
+  stroke-width: 0.5;
+}
+
+.axis-x path {
+  stroke: white;
+  stroke-width: 0.5;
+}
+
+.axis-x text {
+  fill: white;
+  /* stroke-width: 0.5; */
+}
+
+.axis-y .tick {
+  /* stroke-width: 0.5; */
+  font-size: 12px;
+}
+
+.axis-y text {
+  fill: white;
+  /* stroke-width: 0.5; */
+}
+
+.axis-y-lable {
+  font-size: 12px;
+  fill: white;
+}
