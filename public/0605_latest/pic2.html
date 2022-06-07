@@ -68,6 +68,18 @@
       .style('padding', '5px')
       .style('font-family', 'sans-serif');
 
+    var compareTooltip = d3
+      .select('#manga_info')
+      .append('div')
+      .style('opacity', '0')
+      .style('position', 'absolute')
+      .style('background-color', 'white')
+      .style('border', 'solid')
+      .style('border-width', '2px')
+      .style('border-radius', '5px')
+      .style('padding', '5px')
+      .style('font-family', 'sans-serif');
+
     var compareDiv = d3
       .select('#manga_info')
       .append('div')
@@ -79,7 +91,7 @@
       .append('svg')
       .attr('id', 'compare-bar-svg')
       .attr('width', '1300')
-      .attr('height', '200')
+      .attr('height', '190')
       .append('g');
 
     var mouseover = function (d) {
@@ -91,10 +103,6 @@
         .style('opacity', 1);
     };
     var mousemove = function (event, d) {
-      // if (this.style.stroke == 'red') {
-      //   d3.select(this).style('stroke', 'red').style('stroke-width', '4');
-      // }
-
       tooltip
         .html(
           '<div style="display:inline-block;margin-right:10px"><img src="webtoon_img2/' +
@@ -119,13 +127,44 @@
         .style('stroke', '#69b3a2')
         .style('stroke-width', '1')
         .style('opacity', '1');
-
-      // d3.selectAll('rect[class~="selected"]')
-      //   .style('stroke', 'red')
-      //   .style('stroke-width', '4')
-      //   .style('opacity', '1');
     };
-    function Updatebar() {}
+
+    var smallBarMouseover = function (event, d) {
+      console.log(d);
+      compareTooltip.style('opacity', 1);
+      d3.selectAll('.small').style('opacity', function (e) {
+        return e.title_id == d.title_id ? '1' : '0.2';
+      });
+    };
+    var smallBarMousemove = function (event, d) {
+      var currentplot = d3.select(this.parentNode).attr('id');
+      // console.log(currentplot);
+      // console.log(d.title_id);
+      var hover_text = '';
+      if (currentplot == 'plot-1') {
+        hover_text = d.length;
+      } else if (currentplot == 'plot-2') {
+        hover_text = d3.format('.2f')(+d.subscribers / 1000) + 'K';
+      } else if (currentplot == 'plot-3') {
+        hover_text = d3.format('.2f')(d.rating);
+      } else if (currentplot == 'plot-4') {
+        hover_text = d3.format('.2f')(+d.views / 1000) + 'K';
+      } else {
+        hover_text = d3.format('.2f')(+d.likes / 1000) + 'K';
+      }
+      // console.log(window.event.pageX);
+      // console.log(`minus: ${window.event.pageX - 5}`);
+      compareTooltip
+        .html(hover_text)
+        .style('left', window.event.pageX + 5 + 'px')
+        .style('top', window.event.pageY + 5 + 'px');
+      // .style('top', window.event.pageY + 2 + 'px')
+    };
+    var smallBarMouseleave = function (d) {
+      compareTooltip.style('opacity', 0);
+      d3.selectAll('.small').style('opacity', '1');
+    };
+
     // 目前選取的漫畫數
     var selectedNum = 0;
     // 目前選取的漫畫array
@@ -139,11 +178,12 @@
       .select('#manga_inner')
       .append('div')
       .attr('id', 'data_type')
+      .style('font-family', 'sans-serif')
       .lower();
-    data_type.append('p').text('Author').attr('class', 'data_genre');
-    data_type.append('p').text('Genre').attr('class', 'data_genre');
-    data_type.append('p').text('Status').attr('class', 'data_genre');
-    data_type.append('p').text('Daily_pass').attr('class', 'data_genre');
+    data_type.append('span').text('Author').attr('class', 'data_genre');
+    data_type.append('span').text('Genre').attr('class', 'data_genre');
+    data_type.append('span').text('Status').attr('class', 'data_genre');
+    data_type.append('span').text('Daily_pass').attr('class', 'data_genre');
     data_type.append('br');
 
     //Read the data
@@ -363,6 +403,12 @@
           .select('#plot-3')
           .selectAll('rect')
           .data(selectedArr);
+
+        // var bar3Text = compareSvg
+        //   .select('#plot-3')
+        //   .selectAll('.smallText')
+        //   .data(selectedArr);
+
         var bar4 = compareSvg
           .select('#plot-4')
           .selectAll('rect')
@@ -376,7 +422,11 @@
         bar1
           .enter()
           .append('rect')
+          .attr('class', 'small')
           .merge(bar1)
+          .on('mouseover', smallBarMouseover)
+          .on('mousemove', smallBarMousemove)
+          .on('mouseleave', smallBarMouseleave)
           .transition()
           .duration(500)
           .attr('x', (d, i) => {
@@ -397,7 +447,11 @@
         bar2
           .enter()
           .append('rect')
+          .attr('class', 'small')
           .merge(bar2)
+          .on('mouseover', smallBarMouseover)
+          .on('mousemove', smallBarMousemove)
+          .on('mouseleave', smallBarMouseleave)
           .transition()
           .duration(500)
           .attr('x', (d, i) => {
@@ -417,7 +471,11 @@
         bar3
           .enter()
           .append('rect')
+          .attr('class', 'small')
           .merge(bar3)
+          .on('mouseover', smallBarMouseover)
+          .on('mousemove', smallBarMousemove)
+          .on('mouseleave', smallBarMouseleave)
           .transition()
           .duration(500)
           .attr('x', (d, i) => {
@@ -434,10 +492,33 @@
 
         bar3.exit().remove();
 
+        // bar3Text
+        //   .enter()
+        //   .append('text')
+        //   .attr('class', 'smallText')
+        //   .merge(bar3Text)
+        //   .transition()
+        //   .duration(500)
+        //   .text(d => +d.rating)
+        //   .attr('x', (d, i) => {
+        //     return x3(`${i + 1}`) + x3.bandwidth() / 2 + 550;
+        //   })
+        //   .attr('y', d => y3(+d.rating) + 15)
+        //   .attr('font-family', 'sans-serif')
+        //   .attr('font-size', '11px')
+        //   .attr('fill', 'black')
+        //   .attr('text-anchor', 'middle');
+
+        // bar3Text.exit().remove();
+
         bar4
           .enter()
           .append('rect')
+          .attr('class', 'small')
           .merge(bar4)
+          .on('mouseover', smallBarMouseover)
+          .on('mousemove', smallBarMousemove)
+          .on('mouseleave', smallBarMouseleave)
           .transition()
           .duration(500)
           .attr('x', (d, i) => {
@@ -457,7 +538,11 @@
         bar5
           .enter()
           .append('rect')
+          .attr('class', 'small')
           .merge(bar5)
+          .on('mouseover', smallBarMouseover)
+          .on('mousemove', smallBarMousemove)
+          .on('mouseleave', smallBarMouseleave)
           .transition()
           .duration(500)
           .attr('x', (d, i) => {
@@ -584,15 +669,41 @@
           .select('#manga_inner')
           .append('div')
           .attr('class', 'img')
+          .style('font-family', 'sans-serif')
           .style('text-align', 'center')
           .attr('height', 200)
           .attr('width', 'auto')
           .attr('id', `${d.title_id}`);
+
+        var delete_manga = function (d) {
+          delSelectedId = $(this).attr('id').split('-')[1];
+          selectedArr = selectedArr.filter(d => {
+            return d.title_id != delSelectedId;
+          });
+          // console.log(selectedArr);
+          $(this).parent().remove();
+          selectedNum -= 1;
+          // 圖片邊框顏色更新
+          d3.selectAll('.selectedImg')
+            .data(selectedArr)
+            .style('border', function (d, i) {
+              return `8px solid ${selectedColor[i]}`;
+            });
+          UpdateBar();
+        };
+        selected_manga
+          .append('input')
+          .attr('id', `del-${d.title_id}`)
+          .attr('type', 'image')
+          .attr('class', 'delComic')
+          .attr('src', 'xmark.svg')
+          .on('click', delete_manga);
+
         //append the manga's image
         selected_manga
           .append('img')
           .attr('class', 'selectedImg')
-          .attr('src', `webtoon_img2/${d.title}.jpg`)
+          .attr('src', `webtoon_img/${d.title}.jpg`)
           .attr('height', 150)
           .attr('width', 150)
           .style('border', function () {
@@ -603,16 +714,31 @@
             return `8px solid ${selectedColor[selectedIndex]}`;
           });
         // .style('stroke-width', '4');
-        selected_manga.append('p').text(d.title);
-        selected_manga.append('p').text(d.authors);
-        selected_manga.append('p').text(d.genre);
-        selected_manga.append('p').text(d.status);
+
+        selected_manga.append('span').attr('class', 'data_genre').text(d.title);
+        selected_manga
+          .append('span')
+          .attr('class', 'data_genre')
+          .text(d.authors);
+        selected_manga.append('span').attr('class', 'data_genre').text(d.genre);
+        selected_manga
+          .append('span')
+          .attr('class', 'data_genre')
+          .text(d.status);
 
         // Daily Pass
         if ((d.daily_pass = 'TRUE')) {
-          selected_manga.append('i').attr('class', 'fa-solid fa-xmark');
+          selected_manga
+            .append('span')
+            .style('color', 'green')
+            .append('i')
+            .attr('class', 'fa-solid fa-check');
         } else {
-          selected_manga.append('i').attr('class', 'fa-solid fa-check');
+          selected_manga
+            .append('span')
+            .style('color', 'red')
+            .append('i')
+            .attr('class', 'fa-solid fa-xmark');
         }
         // Delete manga
         var delete_manga = function (d) {
@@ -632,13 +758,13 @@
           UpdateBar();
         };
         selected_manga.append('br');
-        selected_manga
-          .append('input')
-          .attr('type', 'button')
-          .attr('value', '刪除')
-          .attr('id', `del-${d.title_id}`)
-          .style('margin', '5px')
-          .on('click', delete_manga);
+        // selected_manga
+        //   .append('input')
+        //   .attr('type', 'button')
+        //   .attr('value', '刪除')
+        //   .attr('id', `del-${d.title_id}`)
+        //   .style('margin', '5px')
+        //   .on('click', delete_manga);
       };
 
       var bar = comic

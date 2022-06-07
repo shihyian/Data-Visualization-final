@@ -69,6 +69,8 @@
 }
 
 #middle {
+  background-color: #325156;
+  padding: 1%;
   border-radius: 30px;
   height: 600px;
 }
