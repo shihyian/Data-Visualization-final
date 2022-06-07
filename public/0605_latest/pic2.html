@@ -1,22 +1,35 @@
 <!DOCTYPE html>
 <head>
   <meta charset="utf-8" />
+  <script src="https://code.jquery.com/jquery-3.0.0.js"></script>
   <!-- Load d3.js -->
   <script src="https://d3js.org/d3.v6.js"></script>
+  <!-- css -->
   <link rel="stylesheet" href="bar.css" />
-  <style>
-    .select_topright {
-      position: absolute;
-      top: 80px;
-      right: 50px;
-      font-size: 18px;
-    }
-  </style>
+  <!-- icon -->
+  <script
+    src="https://kit.fontawesome.com/324b9dcf10.js"
+    crossorigin="anonymous"
+  ></script>
 </head>
-<body style="background-color: #334346">
+<body style="background-color: #325156">
   <!-- Create a div where the graph will take place -->
   <div id="my_dataviz_week"></div>
+  <!-- Div that compare manga -->
+  <div id="manga_info" style="display: none; background-color: aliceblue">
+    <input
+      type="image"
+      id="hide"
+      img
+      src="close.png"
+      style="width: 30px; height: 30px"
+      onClick="hide();"
+    />
+    <div id="manga_inner"></div>
+  </div>
   <div class="select_topright" style="right: 1%; top: 10%">
+    <!-- Compare button -->
+    <p><input type="button" id="show" value="compare" onClick="show();" /></p>
     <select id="selectButton"></select
     ><br />
     <p>
@@ -55,6 +68,84 @@
       .style('padding', '5px')
       .style('font-family', 'sans-serif');
 
+    var compareDiv = d3
+      .select('#manga_info')
+      .append('div')
+      .attr('id', 'compare-bar-div')
+      .style('display', 'block')
+      .style('margin-top', '2%');
+
+    var compareSvg = compareDiv
+      .append('svg')
+      .attr('id', 'compare-bar-svg')
+      .attr('width', '1300')
+      .attr('height', '200')
+      .append('g');
+
+    var mouseover = function (d) {
+      tooltip.style('opacity', 1);
+      d3.selectAll('rect').style('opacity', '0.4');
+      d3.select(this)
+        .style('stroke', 'black')
+        .style('stroke-width', 4)
+        .style('opacity', 1);
+    };
+    var mousemove = function (event, d) {
+      // if (this.style.stroke == 'red') {
+      //   d3.select(this).style('stroke', 'red').style('stroke-width', '4');
+      // }
+
+      tooltip
+        .html(
+          '<div style="display:inline-block;margin-right:10px"><img src="webtoon_img2/' +
+            d.title +
+            '.jpg"></div>' +
+            '<div style="display:inline-block">Title: ' +
+            d.title +
+            '<br>Author: ' +
+            d.authors +
+            '<br>Genre: ' +
+            d.genre +
+            '<br>Weekdays: ' +
+            d.weekdays_all +
+            '</div>'
+        )
+        .style('left', window.event.pageX + 5 + 'px')
+        .style('top', window.event.pageY + 5 + 'px');
+    };
+    var mouseleave = function (d) {
+      tooltip.style('opacity', 0);
+      d3.selectAll('rect')
+        .style('stroke', '#69b3a2')
+        .style('stroke-width', '1')
+        .style('opacity', '1');
+
+      // d3.selectAll('rect[class~="selected"]')
+      //   .style('stroke', 'red')
+      //   .style('stroke-width', '4')
+      //   .style('opacity', '1');
+    };
+    function Updatebar() {}
+    // 目前選取的漫畫數
+    var selectedNum = 0;
+    // 目前選取的漫畫array
+    var selectedArr = [];
+    // 不同漫畫bar的顏色
+    var selectedColor = ['#E36B6B', '#3EB1B9', '#A7CD4F', '#DB9D36', '#A567C9'];
+    // 要刪掉的那部漫畫的id
+    var delSelectedId = '';
+
+    const data_type = d3
+      .select('#manga_inner')
+      .append('div')
+      .attr('id', 'data_type')
+      .lower();
+    data_type.append('p').text('Author').attr('class', 'data_genre');
+    data_type.append('p').text('Genre').attr('class', 'data_genre');
+    data_type.append('p').text('Status').attr('class', 'data_genre');
+    data_type.append('p').text('Daily_pass').attr('class', 'data_genre');
+    data_type.append('br');
+
     //Read the data
     d3.csv('output.csv').then(data => {
       var sortGroup = ['likes', 'rating', 'views', 'subscribers'];
@@ -86,9 +177,312 @@
           return d[0];
         }); // corresponding value returned by the button
 
+      // compare div裡的長條圖
+      var barNum = [
+        { bar: '1' },
+        { bar: '2' },
+        { bar: '3' },
+        { bar: '4' },
+        { bar: '5' },
+      ];
+      var eachPlot = compareSvg
+        .selectAll('plot')
+        .data(barNum)
+        .enter()
+        .append('g')
+        .attr('id', (d, i) => `plot-${i + 1}`);
+
+      // 第一個小bar chart: length
+      const x1 = d3
+        .scaleBand()
+        .range([0, 200])
+        .domain(barNum.map(d => d.bar))
+        .padding(0.2);
+      const x1Axis = d3.axisBottom().scale(x1);
+
+      compareSvg
+        .select('#plot-1')
+        .append('g')
+        .attr('transform', 'translate(50,150)')
+        .call(x1Axis);
+      compareSvg.select('#plot-1').selectAll('.tick').style('opacity', '0');
+      compareSvg
+        .select('#plot-1')
+        .append('text')
+        .style('fill', 'black')
+        .attr('font-family', 'sans-serif')
+        .attr('x', 125)
+        .attr('y', '180')
+        .text('length');
+      const y1 = d3
+        .scaleLinear()
+        .domain([0, d3.max(data.map(d => +d.length))])
+        .range([145, 0]);
+      const y1Axis = d3.axisLeft().scale(y1).ticks(3);
+      compareSvg
+        .select('#plot-1')
+        .append('g')
+        .attr('transform', 'translate(50,5)')
+        .call(y1Axis);
+
+      // 第二個小bar chart: subscribers 單位:K
+      const x2 = d3
+        .scaleBand()
+        .range([0, 200])
+        .domain(barNum.map(d => d.bar))
+        .padding(0.2);
+      const x2Axis = d3.axisBottom().scale(x2);
+      compareSvg
+        .select('#plot-2')
+        .append('g')
+        .attr('transform', 'translate(300,150)')
+        .call(x2Axis);
+      compareSvg.select('#plot-2').selectAll('.tick').style('opacity', '0');
+      compareSvg
+        .select('#plot-2')
+        .append('text')
+        .style('fill', 'black')
+        .attr('font-family', 'sans-serif')
+        .attr('x', 350)
+        .attr('y', '180')
+        .text('subscribers (K)');
+      const y2 = d3
+        .scaleLinear()
+        .domain([0, d3.max(data.map(d => +d.subscribers / 1000))])
+        .range([145, 0]);
+      const y2Axis = d3.axisLeft().scale(y2).ticks(3);
+      compareSvg
+        .select('#plot-2')
+        .append('g')
+        .attr('transform', 'translate(300,5)')
+        .call(y2Axis);
+
+      // 第三個小bar chart: rating
+      const x3 = d3
+        .scaleBand()
+        .range([0, 200])
+        .domain(barNum.map(d => d.bar))
+        .padding(0.2);
+      const x3Axis = d3.axisBottom().scale(x3);
+      compareSvg
+        .select('#plot-3')
+        .append('g')
+        .attr('transform', 'translate(550,150)')
+        .call(x3Axis);
+      compareSvg.select('#plot-3').selectAll('.tick').style('opacity', '0');
+      compareSvg
+        .select('#plot-3')
+        .append('text')
+        .style('fill', 'black')
+        .attr('font-family', 'sans-serif')
+        .attr('x', 625)
+        .attr('y', '180')
+        .text('rating');
+      const y3 = d3.scaleLinear().domain([0, 10]).range([145, 0]);
+      const y3Axis = d3.axisLeft().scale(y3).ticks(3);
+      compareSvg
+        .select('#plot-3')
+        .append('g')
+        .attr('transform', 'translate(550,5)')
+        .call(y3Axis);
+
+      // 第四個小bar chart: views 單位: K
+      const x4 = d3
+        .scaleBand()
+        .range([0, 200])
+        .domain(barNum.map(d => d.bar))
+        .padding(0.2);
+      const x4Axis = d3.axisBottom().scale(x4);
+      compareSvg
+        .select('#plot-4')
+        .append('g')
+        .attr('transform', 'translate(800,150)')
+        .call(x4Axis);
+      compareSvg.select('#plot-4').selectAll('.tick').style('opacity', '0');
+      compareSvg
+        .select('#plot-4')
+        .append('text')
+        .style('fill', 'black')
+        .attr('font-family', 'sans-serif')
+        .attr('x', 875)
+        .attr('y', '180')
+        .text('views (K)');
+      const y4 = d3
+        .scaleLinear()
+        .domain([0, d3.max(data.map(d => +d.views / 1000))])
+        .range([145, 0]);
+      const y4Axis = d3.axisLeft().scale(y4).ticks(3);
+      compareSvg
+        .select('#plot-4')
+        .append('g')
+        .attr('transform', 'translate(800,5)')
+        .call(y4Axis);
+
+      // 第五個小bar chart: likes 單位: K
+      const x5 = d3
+        .scaleBand()
+        .range([0, 200])
+        .domain(barNum.map(d => d.bar))
+        .padding(0.2);
+      const x5Axis = d3.axisBottom().scale(x5);
+      compareSvg
+        .select('#plot-5')
+        .append('g')
+        .attr('transform', 'translate(1050,150)')
+        .call(x5Axis);
+      compareSvg.select('#plot-5').selectAll('.tick').style('opacity', '0');
+      compareSvg
+        .select('#plot-5')
+        .append('text')
+        .style('fill', 'black')
+        .attr('font-family', 'sans-serif')
+        .attr('x', 1125)
+        .attr('y', '180')
+        .text('likes (K)');
+      const y5 = d3
+        .scaleLinear()
+        .domain([0, d3.max(data.map(d => +d.likes / 1000))])
+        .range([145, 0]);
+      const y5Axis = d3.axisLeft().scale(y5).ticks(3);
+      compareSvg
+        .select('#plot-5')
+        .append('g')
+        .attr('transform', 'translate(1050,5)')
+        .call(y5Axis);
+
+      function UpdateBar() {
+        var bar1 = compareSvg
+          .select('#plot-1')
+          .selectAll('rect')
+          .data(selectedArr);
+        var bar2 = compareSvg
+          .select('#plot-2')
+          .selectAll('rect')
+          .data(selectedArr);
+        var bar3 = compareSvg
+          .select('#plot-3')
+          .selectAll('rect')
+          .data(selectedArr);
+        var bar4 = compareSvg
+          .select('#plot-4')
+          .selectAll('rect')
+          .data(selectedArr);
+        var bar5 = compareSvg
+          .select('#plot-5')
+          .selectAll('rect')
+          .data(selectedArr);
+
+        // bar1 update
+        bar1
+          .enter()
+          .append('rect')
+          .merge(bar1)
+          .transition()
+          .duration(500)
+          .attr('x', (d, i) => {
+            // console.log(i);
+            return x1(`${i + 1}`) + 50;
+          })
+          .attr('y', d => y1(+d.length))
+          .attr('width', x1.bandwidth())
+          .attr('height', d => 150 - y1(+d.length))
+          .style('stroke-width', '0')
+          .style('fill', (d, i) => {
+            return selectedColor[i];
+          });
+
+        bar1.exit().remove();
+
+        // bar2 update
+        bar2
+          .enter()
+          .append('rect')
+          .merge(bar2)
+          .transition()
+          .duration(500)
+          .attr('x', (d, i) => {
+            // console.log(i);
+            return x2(`${i + 1}`) + 300;
+          })
+          .attr('y', d => y2(+d.subscribers / 1000))
+          .attr('width', x2.bandwidth())
+          .attr('height', d => 150 - y2(+d.subscribers / 1000))
+          .style('stroke-width', '0')
+          .style('fill', (d, i) => {
+            return selectedColor[i];
+          });
+
+        bar2.exit().remove();
+
+        bar3
+          .enter()
+          .append('rect')
+          .merge(bar3)
+          .transition()
+          .duration(500)
+          .attr('x', (d, i) => {
+            // console.log(i);
+            return x3(`${i + 1}`) + 550;
+          })
+          .attr('y', d => y3(+d.rating))
+          .attr('width', x3.bandwidth())
+          .attr('height', d => 150 - y3(+d.rating))
+          .style('stroke-width', '0')
+          .style('fill', (d, i) => {
+            return selectedColor[i];
+          });
+
+        bar3.exit().remove();
+
+        bar4
+          .enter()
+          .append('rect')
+          .merge(bar4)
+          .transition()
+          .duration(500)
+          .attr('x', (d, i) => {
+            // console.log(i);
+            return x4(`${i + 1}`) + 800;
+          })
+          .attr('y', d => y4(+d.views / 1000))
+          .attr('width', x4.bandwidth())
+          .attr('height', d => 150 - y4(+d.views / 1000))
+          .style('stroke-width', '0')
+          .style('fill', (d, i) => {
+            return selectedColor[i];
+          });
+
+        bar4.exit().remove();
+
+        bar5
+          .enter()
+          .append('rect')
+          .merge(bar5)
+          .transition()
+          .duration(500)
+          .attr('x', (d, i) => {
+            // console.log(i);
+            return x5(`${i + 1}`) + 1050;
+          })
+          .attr('y', d => y5(+d.likes / 1000))
+          .attr('width', x5.bandwidth())
+          .attr('height', d => 150 - y5(+d.likes / 1000))
+          .style('stroke-width', '0')
+          .style('fill', (d, i) => {
+            return selectedColor[i];
+          });
+
+        bar5.exit().remove();
+        // var smallBarPos = eachPlot
+        //   .selectAll('rect')
+        //   .data(barColor)
+        //   .enter()
+        //   .append('rect').transition().duration(500).attr('x', d, i => x);
+      }
+
       // group by weekdays
       var group = d3.group(data, d => d.weekdays);
-      console.log(group);
+      // console.log(group);
 
       var week = [
         'MONDAY',
@@ -167,39 +561,84 @@
         .attr('height', 10)
         .attr('width', 10);
 
-      var mouseover = function (d) {
-        tooltip.style('opacity', 1);
-        d3.selectAll('rect').style('opacity', '0.4');
-        d3.select(this)
-          .style('stroke', 'black')
-          .style('stroke-width', 4)
-          .style('opacity', 1);
-      };
-      var mousemove = function (event, d) {
-        tooltip
-          .html(
-            '<div style="display:inline-block;margin-right:10px"><img src="webtoon_img2/' +
-              d.title +
-              '.jpg"></div>' +
-              '<div style="display:inline-block">Title: ' +
-              d.title +
-              '<br>Author: ' +
-              d.authors +
-              '<br>Genre: ' +
-              d.genre +
-              '<br>Weekdays: ' +
-              d.weekdays_all +
-              '</div>'
-          )
-          .style('left', window.event.pageX + 5 + 'px')
-          .style('top', window.event.pageY + 5 + 'px');
-      };
-      var mouseleave = function (d) {
-        tooltip.style('opacity', 0);
-        d3.selectAll('rect')
-          .style('stroke', '#69b3a2')
-          .style('stroke-width', 1)
-          .style('opacity', '1');
+      // ADD DB CLICK
+      var dblclick = function (event, d) {
+        console.log(d.title_id);
+        if (selectedNum < 5) {
+          selectedArr.push(d);
+          console.log(selectedArr);
+          selectedNum += 1;
+        } else {
+          console.log('5部漫畫是上限');
+          return;
+        }
+        UpdateBar();
+
+        // d3.select(this)
+        //   .style('stroke', 'red')
+        //   .style('stroke-width', 4)
+        //   .attr('class', 'selected');
+        // console.log(this.style['stroke-width']);
+        //  Create div when manga be selected
+        const selected_manga = d3
+          .select('#manga_inner')
+          .append('div')
+          .attr('class', 'img')
+          .style('text-align', 'center')
+          .attr('height', 200)
+          .attr('width', 'auto')
+          .attr('id', `${d.title_id}`);
+        //append the manga's image
+        selected_manga
+          .append('img')
+          .attr('class', 'selectedImg')
+          .attr('src', `webtoon_img/${d.title}.jpg`)
+          .attr('height', 150)
+          .attr('width', 150)
+          .style('border', function () {
+            var selectedIndex = selectedArr.findIndex(function (e) {
+              return e.title_id == d.title_id;
+            });
+
+            return `8px solid ${selectedColor[selectedIndex]}`;
+          });
+        // .style('stroke-width', '4');
+        selected_manga.append('p').text(d.title);
+        selected_manga.append('p').text(d.authors);
+        selected_manga.append('p').text(d.genre);
+        selected_manga.append('p').text(d.status);
+
+        // Daily Pass
+        if ((d.daily_pass = 'TRUE')) {
+          selected_manga.append('i').attr('class', 'fa-solid fa-xmark');
+        } else {
+          selected_manga.append('i').attr('class', 'fa-solid fa-check');
+        }
+        // Delete manga
+        var delete_manga = function (d) {
+          delSelectedId = $(this).attr('id').split('-')[1];
+          selectedArr = selectedArr.filter(d => {
+            return d.title_id != delSelectedId;
+          });
+          // console.log(selectedArr);
+          $(this).parent().remove();
+          selectedNum -= 1;
+          // 圖片邊框顏色更新
+          d3.selectAll('.selectedImg')
+            .data(selectedArr)
+            .style('border', function (d, i) {
+              return `8px solid ${selectedColor[i]}`;
+            });
+          UpdateBar();
+        };
+        selected_manga.append('br');
+        selected_manga
+          .append('input')
+          .attr('type', 'button')
+          .attr('value', '刪除')
+          .attr('id', `del-${d.title_id}`)
+          .style('margin', '5px')
+          .on('click', delete_manga);
       };
 
       var bar = comic
@@ -227,7 +666,8 @@
         .style('stroke', '#69b3a2')
         .on('mouseover', mouseover)
         .on('mousemove', mousemove)
-        .on('mouseleave', mouseleave);
+        .on('mouseleave', mouseleave)
+        .on('dblclick', dblclick);
 
       function update_genre(selectedOption) {
         if (selectedOption != 'All') {
@@ -278,6 +718,7 @@
           .on('mouseover', mouseover)
           .on('mousemove', mousemove)
           .on('mouseleave', mouseleave)
+          .on('dblclick', dblclick)
           .transition()
           .duration(500)
           .attr('x', function (d, i) {
@@ -315,5 +756,12 @@
         update_genre(selectedOption);
       });
     });
+    const hide = function () {
+      $('#manga_info').hide();
+    };
+    const show = function () {
+      $('#manga_info').show();
+      $('#manga_info').css('display', 'inline-block');
+    };
   </script>
 </body>

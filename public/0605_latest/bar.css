@@ -10,6 +10,47 @@
   margin-top: 2%;
 }
 
+.img {
+  display: inline-block;
+  margin: 10px;
+}
+.center {
+  text-align: center;
+}
+#manga_info {
+  z-index: 10;
+  width: auto;
+  /* height: 100%; */
+  position: absolute;
+  top: 3%;
+  left: 5%;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+#data_type {
+  display: inline-block;
+  /* padding: 10px; */
+  text-align: center;
+}
+.data_genre {
+  margin: 14px;
+}
+#hide {
+  top: 0;
+  right: 0;
+  position: absolute;
+  /* height: 40px;
+      width: 40px; */
+}
+
+.select_topright {
+  position: absolute;
+  top: 80px;
+  right: 50px;
+  font-size: 18px;
+}
+
 .axis-x line {
   stroke: white;
   stroke-width: 0.5;

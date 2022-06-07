@@ -4,7 +4,7 @@
 <!-- Load d3.js -->
 <script src="https://d3js.org/d3.v4.js"></script>
 <link rel="stylesheet" href="bar.css" />
-<body style="background-color: #334346">
+<body style="background-color: #325156">
   <!-- Initialize a select button -->
   <div id="buttonArea">
     &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
@@ -60,7 +60,7 @@
     // Parse the Data
     d3.queue()
       .defer(d3.csv, 'data_mean.csv')
-      .defer(d3.csv, 'webtoon_originals_en_edited_new.csv')
+      .defer(d3.csv, 'output.csv')
       .await((error, data, data2) => {
         dataArr = [data, data2];
         var sortGroup = ['rating', 'views', 'likes', 'subscribers'];
