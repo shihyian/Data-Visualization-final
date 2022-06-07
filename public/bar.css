@@ -1,5 +1,5 @@
 #my_dataviz {
-  width: 70%;
+  width: 75%;
   margin: auto;
 }
 
@@ -17,6 +17,12 @@
 .center {
   text-align: center;
 }
+
+.selectedImg {
+  height: 100px;
+  width: 100px;
+}
+
 #manga_info {
   z-index: 10;
   width: auto;
@@ -34,7 +40,8 @@
   text-align: center;
 }
 .data_genre {
-  margin: 14px;
+  display: block;
+  margin: 10px;
 }
 #hide {
   top: 0;
@@ -42,6 +49,14 @@
   position: absolute;
   /* height: 40px;
       width: 40px; */
+}
+.delComic {
+  width: 20px;
+  height: 20px;
+  /* top: 15px;
+  left: 100px; */
+  position: absolute;
+  z-index: 20;
 }
 
 .select_topright {
