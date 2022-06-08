@@ -3,6 +3,10 @@
   margin: auto;
 }
 
+#my_dataviz_week {
+  display: inline-block;
+}
+
 #buttonArea {
   width: 60%;
   margin: auto;
@@ -60,10 +64,9 @@
 }
 
 .select_topright {
-  position: absolute;
-  top: 80px;
-  right: 50px;
-  font-size: 18px;
+  display: inline-block;
+  font-size: 15px;
+  margin-left: 10px;
 }
 
 .axis-x line {
